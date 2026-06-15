@@ -6,7 +6,7 @@ Funciona sin conexión a GCP — solo necesita el cliente LLM para faithfulness.
 import json
 from dataclasses import dataclass
 
-from vertexai.generative_models import GenerativeModel
+import google.genai as genai
 
 
 @dataclass
@@ -42,7 +42,8 @@ def score_faithfulness(
     question: str,
     answer: str,
     context: str,
-    model: GenerativeModel,
+    client: genai.Client,
+    model: str,
 ) -> float | None:
     """
     LLM-as-judge: le pide al modelo que evalúe si la respuesta es fiel al contexto.
@@ -70,7 +71,7 @@ Escala:
 1 - La respuesta ignora el contexto o inventa información"""
 
     try:
-        response = model.generate_content(prompt)
+        response = client.models.generate_content(model=model, contents=prompt)
         text = response.text.strip()
         # Limpiar posibles bloques de código markdown
         if text.startswith("```"):
@@ -88,15 +89,16 @@ def evaluate(
     question: str,
     answer: str,
     chunks: list[dict],
-    model: GenerativeModel | None = None,
+    client: genai.Client | None = None,
+    model: str | None = None,
 ) -> EvaluationResult:
     """Evalúa una respuesta RAG completa."""
     avg_similarity, diversity = score_retrieval(chunks)
 
     faithfulness = None
-    if model is not None:
+    if client is not None and model is not None:
         context = "\n\n---\n\n".join(c["texto"] for c in chunks)
-        faithfulness = score_faithfulness(question, answer, context, model)
+        faithfulness = score_faithfulness(question, answer, context, client, model)
 
     return EvaluationResult(
         avg_similarity=avg_similarity,

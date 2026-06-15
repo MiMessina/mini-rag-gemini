@@ -11,9 +11,7 @@ from pathlib import Path
 
 import streamlit as st
 from dotenv import load_dotenv
-import vertexai
-from vertexai.generative_models import GenerativeModel
-from vertexai.language_models import TextEmbeddingModel
+import google.genai as genai
 from pypdf import PdfReader
 import chromadb
 
@@ -24,16 +22,14 @@ load_dotenv()
 
 GCP_PROJECT_ID = os.getenv("GCP_PROJECT_ID")
 GCP_LOCATION = os.getenv("GCP_LOCATION", "us-central1")
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash-001")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "text-embedding-005")
 
 if not GCP_PROJECT_ID:
     st.error("Falta GCP_PROJECT_ID en el archivo .env — copiá .env.example a .env y completá los valores.")
     st.stop()
 
-vertexai.init(project=GCP_PROJECT_ID, location=GCP_LOCATION)
-llm = GenerativeModel(GEMINI_MODEL)
-embedding_model = TextEmbeddingModel.from_pretrained(EMBEDDING_MODEL)
+client = genai.Client(vertexai=True, project=GCP_PROJECT_ID, location=GCP_LOCATION)
 
 chroma_client = chromadb.PersistentClient(path="./chroma_db")
 COLLECTION_NAME = "documentos"
@@ -59,8 +55,8 @@ def chunking(texto: str, tamano_chunk: int = 800, overlap: int = 150) -> list[st
 
 
 def generar_embedding(texto: str) -> list[float]:
-    embeddings = embedding_model.get_embeddings([texto])
-    return embeddings[0].values
+    result = client.models.embed_content(model=EMBEDDING_MODEL, contents=[texto])
+    return result.embeddings[0].values
 
 
 def ingestar_documento(archivo, nombre: str, progress_bar) -> int:
@@ -107,7 +103,7 @@ Pregunta: {pregunta}
 
 Respuesta:"""
 
-    respuesta = llm.generate_content(prompt).text
+    respuesta = client.models.generate_content(model=GEMINI_MODEL, contents=prompt).text
     return respuesta, chunks
 
 
@@ -153,7 +149,7 @@ with tab2:
     if pregunta and st.button("Buscar respuesta", type="primary"):
         with st.spinner("Buscando y generando respuesta..."):
             respuesta, chunks = buscar_y_responder(pregunta)
-            eval_result = evaluate(pregunta, respuesta, chunks, model=llm)
+            eval_result = evaluate(pregunta, respuesta, chunks, client=client, model=GEMINI_MODEL)
             log_query(pregunta, chunks, respuesta, eval_result)
 
         st.subheader("Respuesta")
