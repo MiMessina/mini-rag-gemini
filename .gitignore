@@ -1,6 +1,8 @@
 .env
 .venv/
 chroma_db/
+logs/
+streamlit_*.txt
 __pycache__/
 *.pyc
 *.pyo
