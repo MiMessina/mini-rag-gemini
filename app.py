@@ -7,7 +7,6 @@ Uso:
 """
 
 import os
-from pathlib import Path
 
 import streamlit as st
 from dotenv import load_dotenv
@@ -120,7 +119,7 @@ with st.sidebar:
     st.markdown(f"**Modelo Embeddings:** `{EMBEDDING_MODEL}`")
     st.markdown(f"**Proyecto GCP:** `{GCP_PROJECT_ID}`")
     st.markdown(f"**Región:** `{GCP_LOCATION}`")
-    st.markdown(f"**Vector Store:** ChromaDB (local)")
+    st.markdown("**Vector Store:** ChromaDB (local)")
     st.markdown("---")
     st.markdown("**Flujo RAG:**")
     st.markdown("1. PDF → Texto")

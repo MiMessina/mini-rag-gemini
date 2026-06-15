@@ -4,8 +4,7 @@ No requiere GCP — escribe localmente en logs/queries.jsonl.
 """
 
 import json
-import os
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 from evaluator import EvaluationResult
@@ -28,7 +27,7 @@ def log_query(
     _ensure_logs_dir()
 
     entry = {
-        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "question": question,
         "answer": answer,
         "chunks_count": len(chunks),
