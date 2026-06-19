@@ -2,13 +2,13 @@
 
 Demostración técnica de un pipeline RAG (*Retrieval-Augmented Generation*) end-to-end usando **Vertex AI** de Google Cloud y ChromaDB como vector store local. Incluye módulo de evaluación de calidad (LLM-as-judge) y observabilidad con logging persistente.
 
-> La rama `main` contiene la versión con Gemini API (AI Studio). Esta rama (`vertex-ai`) usa el SDK enterprise de Vertex AI con autenticación por service account.
+> Pipeline RAG end-to-end con Vertex AI. Autenticación via Application Default Credentials (ADC).
 
 ## Stack
 
 | Componente | Tecnología |
 |---|---|
-| LLM | Vertex AI — Gemini 2.0 Flash |
+| LLM | Vertex AI — Gemini 2.5 Flash |
 | Embeddings | Vertex AI — text-embedding-005 (768 dim) |
 | Vector store | ChromaDB (persistente local) |
 | Interfaz web | Streamlit |
@@ -32,7 +32,7 @@ Pregunta → Vertex AI Embedding → Top-5 chunks más similares ─────
 | | Gemini API (rama `main`) | Vertex AI (esta rama) |
 |---|---|---|
 | **Auth** | API key en `.env` | Service account JSON / ADC |
-| **SDK** | `google-genai` | `google-cloud-aiplatform` / `vertexai` |
+| **SDK** | `google-genai` | `google-genai` (v2.8.0+) |
 | **Embeddings** | text-embedding-004 | text-embedding-005 |
 | **Scope** | Personal / prototipo | Enterprise (IAM, VPC, audit logs) |
 | **Facturación** | Por API key | Por proyecto GCP |
@@ -101,10 +101,9 @@ cp .env.example .env
 Contenido del `.env`:
 
 ```env
-GOOGLE_APPLICATION_CREDENTIALS=./service-account.json
 GCP_PROJECT_ID=mi-proyecto-gcp
 GCP_LOCATION=us-central1
-GEMINI_MODEL=gemini-2.0-flash-001
+GEMINI_MODEL=gemini-2.5-flash
 EMBEDDING_MODEL=text-embedding-005
 ```
 
